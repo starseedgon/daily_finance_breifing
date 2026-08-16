@@ -1,0 +1,74 @@
+name: Daily market summary
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: Data provider
+        required: true
+        default: fdr
+        type: choice
+        options: [fdr, fixture]
+  schedule:
+    - cron: "20 22 * * 1-5"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.5"
+      - name: Restore pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: python -m pip install -e '.[test]'
+      - name: Run unit tests
+        run: python -m pytest
+      - name: Collect market data and generate HTML
+        env:
+          PROVIDER: ${{ github.event.inputs.provider || 'fdr' }}
+        run: python -m finance_briefing --provider "$PROVIDER" --output-dir public
+      - name: Validate generated output
+        run: |
+          test -s public/index.html
+          test -s public/latest.html
+          find public -maxdepth 1 -type f -name '????-??-??.html' -size +0c | grep -q .
+      - name: Upload generated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-briefing-${{ github.run_id }}
+          path: public/
+          if-no-files-found: error
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

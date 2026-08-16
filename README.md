@@ -11,10 +11,10 @@ python -m finance_briefing --provider fixture --date 2026-08-15 --output-dir pub
 ```
 
 명령은 `public/2026-08-15.html`, 같은 내용을 가리키는 `public/latest.html`, Pages의
-진입점인 `public/index.html`을 생성합니다. 실제 데이터는 선택 의존성을 설치해 실행합니다.
+진입점인 `public/index.html`을 생성합니다. 실제 데이터에 필요한 런타임 의존성은 패키지와 함께 설치됩니다.
 
 ```bash
-python -m pip install -e '.[live]'
+python -m pip install -e .
 python -m finance_briefing --provider fdr --output-dir public
 ```
 
@@ -32,7 +32,7 @@ integration test는 명시적으로 환경 변수를 설정한 경우에만 네�
 
 ## GitHub Actions / Pages
 
-`.github/workflows/publish.yml`은 수동 실행과 평일 UTC 22:20 예약 실행을 지원합니다.
+`.github/workflows/daily-market-summary.yml`은 수동 실행과 평일 UTC 22:20 예약 실행을 지원합니다.
 생성 결과를 artifact로 보존하고 GitHub Pages에도 배포합니다. 저장소의 **Settings → Pages**에서
 Source를 **GitHub Actions**로 설정해야 합니다. 최초 1~2주는 Actions 로그의 실행 시작 시각,
 각 지표의 `as_of`, `missing_ratio`를 관찰한 뒤 예약 실행 시각을 조정하세요.

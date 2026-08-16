@@ -7,11 +7,14 @@ name = "daily-finance-briefing"
 version = "0.1.0"
 description = "A deterministic daily finance briefing generator"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "finance-datareader>=0.9.94,<1.0",
+    "pandas>=2.2,<3.0",
+    "Jinja2>=3.1,<4.0",
+]
 
 [project.optional-dependencies]
-live = ["finance-datareader>=0.9.94"]
-test = ["pytest>=8"]
+test = ["pytest>=8.0,<9.0"]
 
 [project.scripts]
 finance-briefing = "finance_briefing.cli:main"
