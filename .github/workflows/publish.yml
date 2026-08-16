@@ -27,23 +27,67 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
       - name: Install package
         run: python -m pip install -e '.[live]'
-      - name: Generate HTML
+      - name: Restore published history
+        run: |
+          mkdir -p site
+          if git ls-remote --exit-code origin refs/heads/gh-pages >/dev/null 2>&1; then
+            git fetch --depth=1 origin gh-pages
+            git archive FETCH_HEAD | tar -x -C site
+          fi
+      - name: Generate site
         env:
           PROVIDER: ${{ github.event.inputs.provider || 'fdr' }}
-        run: python -m finance_briefing --provider "$PROVIDER" --output-dir public
-      - uses: actions/upload-artifact@v4
+        run: |
+          REPORT_DATE=$(date -u +%F)
+          echo "REPORT_DATE=$REPORT_DATE" >> "$GITHUB_ENV"
+          echo "REPORT_YEAR=${REPORT_DATE%%-*}" >> "$GITHUB_ENV"
+          echo "REPORT_MONTH=${REPORT_DATE:5:2}" >> "$GITHUB_ENV"
+          python -m finance_briefing \
+            --provider "$PROVIDER" \
+            --date "$REPORT_DATE" \
+            --output-dir site
+          touch site/.nojekyll
+      - name: Preserve site history on gh-pages
+        env:
+          PAGES_BRANCH_TOKEN: ${{ secrets.PAGES_BRANCH_TOKEN }}
+        run: |
+          test -n "$PAGES_BRANCH_TOKEN" || {
+            echo "PAGES_BRANCH_TOKEN is required to update gh-pages" >&2
+            exit 1
+          }
+          publish_dir=$(mktemp -d)
+          cp -a site/. "$publish_dir/"
+          git -C "$publish_dir" init -b gh-pages
+          git -C "$publish_dir" config user.name github-actions[bot]
+          git -C "$publish_dir" config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git -C "$publish_dir" add --all
+          git -C "$publish_dir" commit -m "Publish briefing $REPORT_DATE"
+          git -C "$publish_dir" push --force \
+            "https://x-access-token:${PAGES_BRANCH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:gh-pages
+      - name: Upload daily run artifact
+        uses: actions/upload-artifact@v4
         with:
           name: finance-briefing-${{ github.run_id }}
-          path: public/
-      - uses: actions/upload-pages-artifact@v3
+          path: |
+            site/${{ env.REPORT_YEAR }}/${{ env.REPORT_MONTH }}/market-summary-${{ env.REPORT_DATE }}.html
+            site/${{ env.REPORT_YEAR }}/${{ env.REPORT_MONTH }}/market-summary-${{ env.REPORT_DATE }}.json
+            site/${{ env.REPORT_YEAR }}/${{ env.REPORT_MONTH }}/run-manifest-${{ env.REPORT_DATE }}.json
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: public/
+          path: site/
 
   deploy:
     environment:
