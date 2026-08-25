@@ -45,3 +45,11 @@ integration test는 명시적으로 환경 변수를 설정한 경우에만 네�
 등록해야 합니다. 워크플로 자체의 `GITHUB_TOKEN` 권한은 `contents: read`, `pages: write`,
 `id-token: write`로 제한됩니다. 최초 1~2주는 Actions 로그의 실행 시작 시각, 각 지표의
 `as_of`, `missing_ratio`를 관찰한 뒤 예약 실행 시각을 조정하세요.
+
+
+## Fine-grained personal access tokens
+해당하는 프로젝트의 Contents에 대해서 Read/Write가 가능하도록 설정한다.  
+그리고, 그 정보를 
+Repository → Settings → Secrets and variables → Actions 여기서 New repository secret을 눌러 이하의 정보를 설정한다.  
+Name: PAGES_BRANCH_TOKEN  
+Secret:<GitHub Personal Access Token>
