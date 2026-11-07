@@ -1,0 +1,38 @@
+{
+  "indicators": [
+    {
+      "as_of": "2026-11-06",
+      "change_pct": -6.0200973290241215,
+      "key": "kospi",
+      "label": "KOSPI",
+      "unit": "pt",
+      "value": 5059.69
+    },
+    {
+      "as_of": "2026-11-06",
+      "change_pct": -5.032355065520844,
+      "key": "kosdaq",
+      "label": "KOSDAQ",
+      "unit": "pt",
+      "value": 644.27
+    },
+    {
+      "as_of": "2026-11-06",
+      "change_pct": 1.2141171866666411,
+      "key": "usdkrw",
+      "label": "USD/KRW",
+      "unit": "원",
+      "value": 1356.3399658203125
+    },
+    {
+      "as_of": "2026-11-06",
+      "change_pct": 0.3145326640212831,
+      "key": "sp500",
+      "label": "S&P 500",
+      "unit": "pt",
+      "value": 7376.85986328125
+    }
+  ],
+  "provider": "fdr",
+  "report_date": "2026-11-07"
+}
